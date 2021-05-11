@@ -9,7 +9,8 @@ async function run() {
     const pullRequestTitle = core.getInput("PULL_REQUEST_TITLE");
     const pullRequestBody = core.getInput("PULL_REQUEST_BODY");
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
-    const contentComparison = true;//core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
+    const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
+    console.log(`contentComparison = ${contentComparison}`);
 
     console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
 
