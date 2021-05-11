@@ -11,7 +11,7 @@ async function run() {
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
     const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
 
-    console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
+    console.log(`${contentComparison} Making a pull request to ${toBranch} from ${fromBranch}.`);
 
     console.log(`Debug contentComparison ${contentComparison}`);
 
@@ -49,7 +49,7 @@ async function run() {
         });
 
         console.log(
-          `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}.`
+          `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}`
         );
 
         core.setOutput("PULL_REQUEST_URL", pullRequest.url.toString());
