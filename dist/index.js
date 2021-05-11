@@ -1990,7 +1990,6 @@ async function run() {
     const pullRequestBody = core.getInput("PULL_REQUEST_BODY");
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
     const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
-    console.log(`contentComparison = ${contentComparison}`);
 
     console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
 
@@ -2010,8 +2009,6 @@ async function run() {
     });
 
     if (!currentPull) {
-      const hasDiff = !hasContentDifference(octokit, repository, fromBranch, toBranch);
-      console.log(`Debug contentComparison ${contentComparison} ${hasDiff}`);
       if (contentComparison && !hasContentDifference(octokit, repository, fromBranch, toBranch)) {
         console.log(`There is no content difference between ${fromBranch} and ${toBranch}.`);
       } else {
@@ -2062,7 +2059,7 @@ async function hasContentDifference(octokit, repository, fromBranch, toBranch) {
       per_page: 1
   });
 
-  console.log(`Found compareCommits response ${response}`);
+  console.log(`Found compareCommits response ${JSON.stringify(response)}`);
 
   return response.files.length > 0;
 }
