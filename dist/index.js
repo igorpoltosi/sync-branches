@@ -2009,8 +2009,12 @@ async function run() {
     });
 
     if (!currentPull) {
-      console.log(`hasContentDifference ${hasContentDifference(octokit, repository, fromBranch, toBranch)}`);
-      if (contentComparison && hasContentDifference(octokit, repository, fromBranch, toBranch)) {
+      let shouldCreatePullRequest = true;
+      if (contentComparison) {
+        shouldCreatePullRequest = await hasContentDifference(octokit, repository, fromBranch, toBranch);
+      }
+
+      if (shouldCreatePullRequest) {
         const { data: pullRequest } = await octokit.pulls.create({
           owner: repository.owner.login,
           repo: repository.name,
