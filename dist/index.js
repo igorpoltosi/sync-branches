@@ -1991,7 +1991,7 @@ async function run() {
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
     const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
 
-    console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
+    console.log(`Should a pull request to ${toBranch} from ${fromBranch} be created?`);
 
     const {
       payload: { repository }
@@ -2061,8 +2061,6 @@ async function hasContentDifference(octokit, repository, fromBranch, toBranch) {
       page: 1,
       per_page: 1
   });
-
-  console.log(`Found compareCommits response files ${response.files.length}: ${JSON.stringify(response.files)}`);
   return response.files.length > 0;
 }
 
