@@ -29,6 +29,8 @@ async function run() {
     });
 
     if (!currentPull) {
+      console.log(`contentComparison type ${typeof contentComparison} ${contentComparison}`);
+      console.log(`hasDiff ${contentComparison && !hasContentDifference(octokit, repository, fromBranch, toBranch)}`);
       if (contentComparison && !hasContentDifference(octokit, repository, fromBranch, toBranch)) {
         console.log(`There is no content difference between ${fromBranch} and ${toBranch}.`);
       } else {
@@ -68,8 +70,6 @@ async function run() {
 }
 
 async function hasContentDifference(octokit, repository, fromBranch, toBranch) {
-  console.log(`Checking difference: ${repository.owner.name} ${repository.name} ${fromBranch} ${toBranch}`);
-
   const { data: response } = await octokit.repos.compareCommits({
       owner: repository.owner.name,
       repo: repository.name,
@@ -79,8 +79,7 @@ async function hasContentDifference(octokit, repository, fromBranch, toBranch) {
       per_page: 1
   });
 
-  console.log(`Found compareCommits response ${JSON.stringify(response)}`);
-
+  console.log(`Found compareCommits response files ${response.files.length} - ${response.files}`);
   return response.files.length > 0;
 }
 
