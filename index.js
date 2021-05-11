@@ -9,11 +9,9 @@ async function run() {
     const pullRequestTitle = core.getInput("PULL_REQUEST_TITLE");
     const pullRequestBody = core.getInput("PULL_REQUEST_BODY");
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
-    const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
+    const contentComparison = true;//core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
 
-    console.log(`${contentComparison} Making a pull request to ${toBranch} from ${fromBranch}.`);
-
-    console.log(`Debug contentComparison ${contentComparison}`);
+    console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
 
     const {
       payload: { repository }
@@ -31,6 +29,8 @@ async function run() {
     });
 
     if (!currentPull) {
+      const hasDiff = !hasContentDifference(octokit, repository, fromBranch, toBranch);
+      console.log(`Debug contentComparison ${contentComparison} ${hasDiff}`);
       if (contentComparison && !hasContentDifference(octokit, repository, fromBranch, toBranch)) {
         console.log(`There is no content difference between ${fromBranch} and ${toBranch}.`);
       } else {
