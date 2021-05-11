@@ -1989,6 +1989,8 @@ async function run() {
     const pullRequestTitle = core.getInput("PULL_REQUEST_TITLE");
     const pullRequestBody = core.getInput("PULL_REQUEST_BODY");
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
+    const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
+    console.log(`contentComparison = ${contentComparison}`);
 
     console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
 
@@ -2008,26 +2010,32 @@ async function run() {
     });
 
     if (!currentPull) {
-      const { data: pullRequest } = await octokit.pulls.create({
-        owner: repository.owner.login,
-        repo: repository.name,
-        head: fromBranch,
-        base: toBranch,
-        title: pullRequestTitle
-          ? pullRequestTitle
-          : `sync: ${fromBranch} to ${toBranch}`,
-        body: pullRequestBody
-          ? pullRequestBody
-          : `sync-branches: New code has just landed in ${fromBranch}, so let's bring ${toBranch} up to speed!`,
-        draft: pullRequestIsDraft
-      });
+      const hasDiff = !hasContentDifference(octokit, repository, fromBranch, toBranch);
+      console.log(`Debug contentComparison ${contentComparison} ${hasDiff}`);
+      if (contentComparison && !hasContentDifference(octokit, repository, fromBranch, toBranch)) {
+        console.log(`There is no content difference between ${fromBranch} and ${toBranch}.`);
+      } else {
+        const { data: pullRequest } = await octokit.pulls.create({
+          owner: repository.owner.login,
+          repo: repository.name,
+          head: fromBranch,
+          base: toBranch,
+          title: pullRequestTitle
+            ? pullRequestTitle
+            : `sync: ${fromBranch} to ${toBranch}`,
+          body: pullRequestBody
+            ? pullRequestBody
+            : `sync-branches: New code has just landed in ${fromBranch}, so let's bring ${toBranch} up to speed!`,
+          draft: pullRequestIsDraft
+        });
 
-      console.log(
-        `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}.`
-      );
+        console.log(
+          `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}`
+        );
 
-      core.setOutput("PULL_REQUEST_URL", pullRequest.url.toString());
-      core.setOutput("PULL_REQUEST_NUMBER", pullRequest.number.toString());
+        core.setOutput("PULL_REQUEST_URL", pullRequest.url.toString());
+        core.setOutput("PULL_REQUEST_NUMBER", pullRequest.number.toString());
+      }
     } else {
       console.log(
         `There is already a pull request (${currentPull.number}) to ${toBranch} from ${fromBranch}.`,
@@ -2040,6 +2048,23 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message);
   }
+}
+
+async function hasContentDifference(octokit, repository, fromBranch, toBranch) {
+  console.log(`Checking difference: ${repository.owner.name} ${repository.name} ${fromBranch} ${toBranch}`);
+
+  const { data: response } = await octokit.repos.compareCommits({
+      owner: repository.owner.name,
+      repo: repository.name,
+      base: toBranch,
+      head: fromBranch,
+      page: 1,
+      per_page: 1
+  });
+
+  console.log(`Found compareCommits response ${response}`);
+
+  return response.files.length > 0;
 }
 
 run();
