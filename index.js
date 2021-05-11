@@ -9,6 +9,7 @@ async function run() {
     const pullRequestTitle = core.getInput("PULL_REQUEST_TITLE");
     const pullRequestBody = core.getInput("PULL_REQUEST_BODY");
     const pullRequestIsDraft = core.getInput("PULL_REQUEST_IS_DRAFT").toLowerCase() === "true";
+    const contentComparison = core.getInput("CONTENT_COMPARISON").toLowerCase() === "true";
 
     console.log(`Making a pull request to ${toBranch} from ${fromBranch}.`);
 
@@ -28,26 +29,30 @@ async function run() {
     });
 
     if (!currentPull) {
-      const { data: pullRequest } = await octokit.pulls.create({
-        owner: repository.owner.login,
-        repo: repository.name,
-        head: fromBranch,
-        base: toBranch,
-        title: pullRequestTitle
-          ? pullRequestTitle
-          : `sync: ${fromBranch} to ${toBranch}`,
-        body: pullRequestBody
-          ? pullRequestBody
-          : `sync-branches: New code has just landed in ${fromBranch}, so let's bring ${toBranch} up to speed!`,
-        draft: pullRequestIsDraft
-      });
+      if (contentComparison && !hasContentDifference(octokit, fromBranch, toBranch)) {
+        console.log(`There is no content difference between ${fromBranch} and ${toBranch}.`);
+      } else {
+        const { data: pullRequest } = await octokit.pulls.create({
+          owner: repository.owner.login,
+          repo: repository.name,
+          head: fromBranch,
+          base: toBranch,
+          title: pullRequestTitle
+            ? pullRequestTitle
+            : `sync: ${fromBranch} to ${toBranch}`,
+          body: pullRequestBody
+            ? pullRequestBody
+            : `sync-branches: New code has just landed in ${fromBranch}, so let's bring ${toBranch} up to speed!`,
+          draft: pullRequestIsDraft
+        });
 
-      console.log(
-        `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}.`
-      );
+        console.log(
+          `Pull request (${pullRequest.number}) successful! You can view it here: ${pullRequest.url}.`
+        );
 
-      core.setOutput("PULL_REQUEST_URL", pullRequest.url.toString());
-      core.setOutput("PULL_REQUEST_NUMBER", pullRequest.number.toString());
+        core.setOutput("PULL_REQUEST_URL", pullRequest.url.toString());
+        core.setOutput("PULL_REQUEST_NUMBER", pullRequest.number.toString());
+      }
     } else {
       console.log(
         `There is already a pull request (${currentPull.number}) to ${toBranch} from ${fromBranch}.`,
@@ -60,6 +65,11 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message);
   }
+}
+
+async function hasContentDifference(octokit, fromBranch, toBranch) {
+  console.log(`Checking difference: ${fromBranch} ${toBranch}`);
+  return true;
 }
 
 run();
